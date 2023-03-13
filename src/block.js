@@ -46,9 +46,11 @@ class Block {
             // Comparing if the hashes changed
             if (selfHash != recalculatedHash) {
             // Returning the Block is not valid
+                console.log('Returning the Block is not valid: ' + selfHash + ' != ' + recalculatedHash);
                 resolve(false);
             } else {
             // Returning the Block is valid
+            console.log('Returning the Block is valid: ' + selfHash + ' != ' + recalculatedHash);
             resolve(true);
             }
 
