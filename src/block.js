@@ -46,11 +46,11 @@ class Block {
             // Comparing if the hashes changed
             if (selfHash != recalculatedHash) {
             // Returning the Block is not valid
-                console.log('Returning the Block is not valid: ' + selfHash + ' != ' + recalculatedHash);
+                console.log('<block::validate> Returning the Block is not valid: ' + selfHash + ' != ' + recalculatedHash);
                 resolve(false);
             } else {
             // Returning the Block is valid
-            console.log('Returning the Block is valid: ' + selfHash + ' != ' + recalculatedHash);
+            console.log('<block::validate> Returning the Block is valid: ' + selfHash + ' != ' + recalculatedHash);
             resolve(true);
             }
 
@@ -67,12 +67,23 @@ class Block {
      *     or Reject with an error.
      */
     getBData() {
+        let self = this;
+        return new Promise((resolve, reject) => {
         // Getting the encoded data saved in the Block
+        const encodedDataHx = self.body;        
         // Decoding the data to retrieve the JSON representation of the object
+        const decodedData = hex2ascii(encodedDataHx);
         // Parse the data to an object to be retrieve.
-
+        const parsedObject = JSON.parse(decodedData);
         // Resolve with the data if the object isn't the Genesis block
-
+        if (parsedObject) {
+            console.log("<block::getBData> Object is not the Genesis block. Parsed object has been resolved.");
+            resolve(parsedObject);
+        } else {
+            console.log("<block::getBData> There is no parsed object!");
+            reject(Error("There is no parsed object."))
+        }
+    });
     }
 
 }
