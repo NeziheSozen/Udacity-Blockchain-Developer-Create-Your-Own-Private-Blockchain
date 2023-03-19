@@ -123,7 +123,7 @@ class Blockchain {
             let dif = (currentTime - messageTime);
             console.log("<blockchain::submitStar> Current time - Message time: " + dif);
 
-            if (dif > 300000) {
+            if (dif < 300000) {
                 if(bitcoinMessage.verify(message, address, signature)) {
                     let block = new BlockClass.Block({"owner": address, "star": star});
                     await self._addBlock(block);
