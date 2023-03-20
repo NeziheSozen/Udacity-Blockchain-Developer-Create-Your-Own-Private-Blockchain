@@ -68,14 +68,17 @@ class Blockchain {
             block.height = self.height + 1;
             block.time = new Date().getTime().toString().slice(0, -3);
             block.hash = SHA256(JSON.stringify(block)).toString();
-            self.chain.push(block);
-            self.height = block.height;
-            if (self.chain[self.height] == block) {
-                console.log("<blockchain::_addBlock> Block has been resolved.");
-                resolve(block);
-            } else {
+
+            let validation_error = await self.validateChain();
+
+            if(validation_error.length > 0){
                 console.log("<blockchain::_addBlock> Block has been rejected.");
                 reject(Error("Block has been rejected."));
+            } else{
+                self.chain.push(block);
+                self.height = block.height;
+                console.log("<blockchain::_addBlock> Block has been resolved.");
+                resolve(block);
             }
         });
     }
@@ -123,7 +126,7 @@ class Blockchain {
             let dif = (currentTime - messageTime);
             console.log("<blockchain::submitStar> Current time - Message time: " + dif);
 
-            if (dif < 300000) {
+            if (dif < 300) {
                 if(bitcoinMessage.verify(message, address, signature)) {
                     let block = new BlockClass.Block({"owner": address, "star": star});
                     await self._addBlock(block);
@@ -186,6 +189,7 @@ class Blockchain {
             self.chain.forEach(function(block) {
                 block.getBData().then(data => {
                     if (data.owner) {
+                        console.log("<blockchain::getStarsByWalletAdress> Stars data have been pushed.");
                         stars.push(data);
                     }
                 });
@@ -204,25 +208,24 @@ class Blockchain {
         let self = this;
         let errorLog = [];
         return new Promise(async (resolve, reject) => {
-            for (let block of self.chain) {
-                if (await block.validate()) {
-                    if (block.height > 0) {
-                        let prevBlock = self.chain.filter(b => b.height === block.height - 1)[0];
-                        if (block.previousBlockHash !== prevBlock.hash) {
-                            console.log("<blockchain::validateChain> Block has been resolved with hash value.");
-                            errorLog.push(new Error(`Chain is not valid! Block height: #${block.height} , previous block height: #${block.height - 1}.`));
-                        }
-                    }
-                } else {
-                    console.log("<blockchain::validateChain> Block is not valid.");
-                    errorLog.push(new Error(`Block is not valid: Block height #${block.height}: block hash: ${block.hash}`))
-                }
+          self.chain.forEach(async (block) => {
+            try {
+              await block.validate();
+            } catch (error) {      
+              console.log("<blockchain::validateChain> There is an error when validating the chain.");                                                                                                                
+              errorLog.push(error);
             }
+          });    
+                                                                                       
+          if (errorLog.length > 0) {  
+            console.log("<blockchain::validateChain> There is an error when validating the chain.");                                                          
+            resolve(errorLog);
+          } else {
             console.log("<blockchain::validateChain> There is no error when validating the chain.");
-            errorLog.length > 0 ? resolve(errorLog) : resolve('There is no error when validating the chain.');
+            resolve([]);
+          }
         });
-    }
-
+      }
 }
 
 module.exports.Blockchain = Blockchain;   
